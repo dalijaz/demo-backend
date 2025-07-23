@@ -25,6 +25,11 @@ public Certificate(String name, String description) {
     this.name = name;
     this.description = description;
 }
+public Certificate(String name, String description, User user) {
+    this.name = name;
+    this.description = description;
+    this.user = user;
+}
 
 
     // Getters and setters

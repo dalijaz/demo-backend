@@ -1,14 +1,11 @@
 package dali.service;
 
+import dali.model.Certificate;
+import dali.repository.CertificateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import dali.repository.CertificateRepository;
-import dali.repository.UserRepository;
-import dali.model.Certificate;
-import dali.model.User;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CertificateService {
@@ -16,16 +13,22 @@ public class CertificateService {
     @Autowired
     private CertificateRepository certificateRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
     public List<Certificate> getCertificatesByEmail(String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        return userOpt.map(certificateRepository::findByUser).orElse(List.of());
+        System.out.println("🔍 Looking for certificates for user email: " + email);
+
+        List<Certificate> certs = certificateRepository.findByUserEmail(email);
+
+        System.out.println("📦 Certificates found: " + certs.size());
+        for (Certificate cert : certs) {
+            System.out.println("   - " + cert.getName() + ": " + cert.getDescription());
+        }
+
+        return certs;
     }
 
     public Certificate getCertificateById(Long id) {
-        return certificateRepository.findById(id).orElse(null);
+        return certificateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
     }
 
     public Certificate saveCertificate(Certificate certificate) {
