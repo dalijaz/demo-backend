@@ -1,6 +1,9 @@
 package dali.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "certificates")
@@ -10,42 +13,32 @@ public class Certificate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
+
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")  // Foreign key to user table
-    private User user;
+    // Do not serialize questions in /certificates responses to avoid recursion
+    @OneToMany(mappedBy = "certificate", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<QuizQuestion> questions = new ArrayList<>();
 
-    // No-args constructor (needed by JPA)
-public Certificate() {}
+    public Certificate() {}
 
-// Constructor with fields
-public Certificate(String name, String description) {
-    this.name = name;
-    this.description = description;
-}
-public Certificate(String name, String description, User user) {
-    this.name = name;
-    this.description = description;
-    this.user = user;
-}
+    public Certificate(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 
-
-    // Getters and setters
     public Long getId() { return id; }
-
     public void setId(Long id) { this.id = id; }
 
     public String getName() { return name; }
-
     public void setName(String name) { this.name = name; }
 
     public String getDescription() { return description; }
-
     public void setDescription(String description) { this.description = description; }
 
-    public User getUser() { return user; }
-
-    public void setUser(User user) { this.user = user; }
+    public List<QuizQuestion> getQuestions() { return questions; }
+    public void setQuestions(List<QuizQuestion> questions) { this.questions = questions; }
 }

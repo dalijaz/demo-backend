@@ -1,3 +1,4 @@
+// src/main/java/dali/model/User.java
 package dali.model;
 
 import jakarta.persistence.*;
@@ -16,22 +17,31 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // Account activation flag
     @Column(nullable = false)
-    private boolean enabled = false;  // Account activation flag
+    private boolean enabled = false;
 
+    // Email verification token
     @Column(name = "verification_token")
-    private String verificationToken;  // Unique token for email verification
+    private String verificationToken;
 
-    // Constructors
+    // 🔹 Persisted role (maps to your MySQL ENUM('ROLE_ADMIN','ROLE_USER'))
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.ROLE_USER;
+
     public User() {}
 
     public User(String email, String password) {
         this.email = email;
         this.password = password;
         this.enabled = false;
+        this.role = Role.ROLE_USER;
     }
 
-    // Getters and setters
+    public boolean isVerified() { return this.enabled; }
+
+    // Getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -46,4 +56,7 @@ public class User {
 
     public String getVerificationToken() { return verificationToken; }
     public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 }

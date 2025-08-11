@@ -1,11 +1,9 @@
 package dali.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import dali.service.CertificateService;
 import dali.model.Certificate;
+import dali.service.CertificateService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,20 +15,15 @@ public class CertificateController {
     @Autowired
     private CertificateService certificateService;
 
-    // Only returns certificates for the authenticated user (NO email param needed)
+    // Get all certificates (publicly)
     @GetMapping
-    public List<Certificate> getUserCertificates(Authentication authentication) {
-        String email = authentication.getName(); // JWT subject
-        return certificateService.getCertificatesByEmail(email);
+    public List<Certificate> getAllCertificates() {
+        return certificateService.getAllCertificates();
     }
 
+    // Get a certificate by ID (for details/test page later)
     @GetMapping("/{id}")
     public Certificate getCertificate(@PathVariable Long id) {
         return certificateService.getCertificateById(id);
-    }
-
-    @PostMapping
-    public Certificate createCertificate(@RequestBody Certificate certificate) {
-        return certificateService.saveCertificate(certificate);
     }
 }

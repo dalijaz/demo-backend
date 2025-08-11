@@ -1,59 +1,81 @@
+// src/main/java/dali/security/JwtUtil.java
 package dali.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-   private final String SECRET_KEY = "Fgj9v8dIuN7jKmP0xqR4tB6eHcZ1sY2wVrLuA5oTq"; // at least 32 characters
 
+    private static final String SECRET_B64 =
+            "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6MDEyMzQ1Njc4OQ==";
 
-    // Generate token for user
-    public String generateToken(String username) {
+    private static final long DEFAULT_TTL_MILLIS = 24L * 60 * 60 * 1000;
+
+    private Key getSignKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_B64);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String generateToken(String username, String role) {
+        return generateToken(username, role, DEFAULT_TTL_MILLIS);
+    }
+
+    public String generateToken(String username, String role, long ttlMillis) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + ttlMillis);
         return Jwts.builder()
                 .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 1 day
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .addClaims(Map.of("role", role))
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Extract username from token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // Extract expiration date from token
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // Check if token is expired
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    // Validate token with user details
-    public Boolean validateToken(String token, org.springframework.security.core.userdetails.UserDetails userDetails) {
+    public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username != null
+                && username.equals(userDetails.getUsername())
+                && !isTokenExpired(token));
     }
 
-    // Extract a specific claim
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
+        final Claims claims = parseAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    // Parse the claims from the token
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+    private boolean isTokenExpired(String token) {
+        Date exp = extractExpiration(token);
+        return exp.before(new Date());
+    }
+
+    private Claims parseAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
