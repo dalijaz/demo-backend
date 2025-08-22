@@ -1,16 +1,18 @@
-// src/main/java/dali/controller/admin/AdminCertificateController.java
+// src/main/java/dali/controller/AdminCertificateController.java
 package dali.controller.admin;
 
 import dali.model.Certificate;
 import dali.repository.CertificateRepository;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin/certificates")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {
+        "http://localhost:4200",
+        "https://*.ngrok-free.app"
+})
 public class AdminCertificateController {
 
     private final CertificateRepository repo;
@@ -20,34 +22,35 @@ public class AdminCertificateController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<Certificate> list() {
+    public List<Certificate> all() {
         return repo.findAll();
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Certificate get(@PathVariable Long id) {
-        return repo.findById(id).orElseThrow(() -> new RuntimeException("Certificate not found"));
-    }
-
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public Certificate create(@RequestBody Certificate c) {
-        c.setId(null);
         return repo.save(c);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public Certificate update(@PathVariable Long id, @RequestBody Certificate c) {
-        repo.findById(id).orElseThrow(() -> new RuntimeException("Certificate not found"));
-        c.setId(id);
-        return repo.save(c);
+        Certificate existing = repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Certificate not found"));
+
+        // ✅ partial update: only overwrite provided fields
+        if (c.getName() != null && !c.getName().isBlank()) {
+            existing.setName(c.getName());
+        }
+        if (c.getDescription() != null) {
+            existing.setDescription(c.getDescription());
+        }
+        if (c.getDurationSeconds() != null) {
+            existing.setDurationSeconds(c.getDurationSeconds());
+        }
+
+        return repo.save(existing);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         repo.deleteById(id);
     }

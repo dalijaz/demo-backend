@@ -27,10 +27,16 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * @param role should be "ROLE_ADMIN" or "ROLE_USER" (Spring-style)
+     */
     public String generateToken(String username, String role) {
         return generateToken(username, role, DEFAULT_TTL_MILLIS);
     }
 
+    /**
+     * @param role should be "ROLE_ADMIN" or "ROLE_USER" (Spring-style)
+     */
     public String generateToken(String username, String role, long ttlMillis) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + ttlMillis);

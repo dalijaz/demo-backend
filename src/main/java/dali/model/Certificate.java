@@ -18,6 +18,10 @@ public class Certificate {
 
     private String description;
 
+    // NEW: quiz duration (seconds). Null => frontend can fallback to a default.
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds; // e.g. 900 = 15 minutes
+
     // Do not serialize questions in /certificates responses to avoid recursion
     @OneToMany(mappedBy = "certificate", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -38,6 +42,9 @@ public class Certificate {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public Integer getDurationSeconds() { return durationSeconds; }
+    public void setDurationSeconds(Integer durationSeconds) { this.durationSeconds = durationSeconds; }
 
     public List<QuizQuestion> getQuestions() { return questions; }
     public void setQuestions(List<QuizQuestion> questions) { this.questions = questions; }
