@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull; // <-- add
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -31,9 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,     // <-- annotate
+            @NonNull HttpServletResponse response,   // <-- annotate
+            @NonNull FilterChain filterChain)        // <-- annotate
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
@@ -47,16 +49,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                     if (jwtUtil.validateToken(jwt, userDetails)) {
-                        // Start with authorities from DB (if any)
                         Collection<? extends GrantedAuthority> dbAuths = userDetails.getAuthorities();
                         List<GrantedAuthority> merged = new ArrayList<>(dbAuths);
 
-                        // 🔐 Add authority based on JWT claim(s)
-                        String roleClaim = jwtUtil.extractRole(jwt); // e.g. "ROLE_ADMIN" or "ROLE_USER"
+                        String roleClaim = jwtUtil.extractRole(jwt);
                         if (roleClaim != null && !roleClaim.isBlank()) {
-                            // Spring's hasRole("ADMIN") expects authorities like "ROLE_ADMIN"
                             String normalized = roleClaim.startsWith("ROLE_") ? roleClaim : "ROLE_" + roleClaim;
-                            // Avoid duplicates
                             boolean exists = merged.stream().anyMatch(a -> a.getAuthority().equalsIgnoreCase(normalized));
                             if (!exists) merged.add(new SimpleGrantedAuthority(normalized));
                         }
@@ -68,10 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
                 }
-            } catch (Exception ex) {
-                // Token error => do not authenticate; let the chain continue.
-                // Optionally log at DEBUG level.
-            }
+            } catch (Exception ignored) { }
         }
 
         filterChain.doFilter(request, response);

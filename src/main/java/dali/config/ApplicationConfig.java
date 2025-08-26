@@ -17,9 +17,10 @@ public class ApplicationConfig {
     }
 
     @Bean
+    @SuppressWarnings("deprecation") // using legacy API for broad version-compat
     public DaoAuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(customUserDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(); // ctor flagged deprecated
+        provider.setUserDetailsService(customUserDetailsService);             // setter flagged deprecated
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }

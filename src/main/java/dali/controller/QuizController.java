@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/quiz")
-@CrossOrigin(origins = "http://localhost:4200")
+// @CrossOrigin(origins = "http://localhost:4200")  <-- REMOVE THIS
 public class QuizController {
 
     private final QuizService quizService;
@@ -36,27 +36,19 @@ public class QuizController {
     public QuizResultResponse submitAnswers(@PathVariable Long certificateId,
                                             @RequestBody QuizSubmissionRequest request,
                                             Authentication auth) {
-        if (auth == null || auth.getName() == null) {
-            throw new IllegalStateException("Unauthenticated");
-        }
+        if (auth == null || auth.getName() == null) throw new IllegalStateException("Unauthenticated");
         return submissionService.submit(certificateId, auth.getName(), request.getAnswers());
     }
 
-    // ---------- NEW: history & detail ----------
-
     @GetMapping("/submissions/mine")
     public List<SubmissionSummaryDTO> mySubmissions(Authentication auth) {
-        if (auth == null || auth.getName() == null) {
-            throw new IllegalStateException("Unauthenticated");
-        }
+        if (auth == null || auth.getName() == null) throw new IllegalStateException("Unauthenticated");
         return submissionService.listMine(auth.getName());
     }
 
     @GetMapping("/submissions/{id}")
     public SubmissionDetailDTO submissionDetail(@PathVariable Long id, Authentication auth) {
-        if (auth == null || auth.getName() == null) {
-            throw new IllegalStateException("Unauthenticated");
-        }
+        if (auth == null || auth.getName() == null) throw new IllegalStateException("Unauthenticated");
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         return submissionService.getDetail(id, auth.getName(), isAdmin);

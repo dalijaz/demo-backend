@@ -1,8 +1,7 @@
-// src/main/java/dali/controller/AuthController.java
 package dali.controller;
 
 import dali.model.User;
-import dali.model.Role; // <-- make sure this enum exists: ROLE_ADMIN, ROLE_USER
+import dali.model.Role;
 import dali.security.JwtUtil;
 import dali.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = {
-        "http://localhost:4200",
-        "https://956105106b9e.ngrok-free.app"
-})
 public class AuthController {
 
     @Autowired private UserService userService;
@@ -49,7 +44,6 @@ public class AuthController {
         User user = userOpt.get();
 
         if (user.getRole() != Role.ROLE_USER) {
-            // prevent admins from logging in via the user endpoint
             return ResponseEntity.status(403).body("This endpoint is for USER accounts only.");
         }
 
@@ -77,13 +71,12 @@ public class AuthController {
             return ResponseEntity.status(403).body("This endpoint is for ADMIN accounts only.");
         }
 
-        String roleWithPrefix = user.getRole().name();                     // "ROLE_ADMIN"
-        String roleNoPrefix   = "ADMIN";
+        String roleWithPrefix = user.getRole().name();  // "ROLE_ADMIN"
         String token          = jwtUtil.generateToken(user.getEmail(), roleWithPrefix);
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "role",  roleNoPrefix,
+                "role",  "ADMIN",
                 "email", user.getEmail()
         ));
     }
