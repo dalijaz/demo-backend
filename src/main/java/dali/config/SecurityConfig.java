@@ -1,4 +1,3 @@
-// src/main/java/dali/config/SecurityConfig.java
 package dali.config;
 
 import dali.security.JwtAuthenticationFilter;
@@ -37,21 +36,15 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // 🔒 turn off HTML/basic auth so no HTML pages are sent
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
             .authorizeHttpRequests(auth -> auth
-                // public endpoints
                 .requestMatchers("/auth/**", "/verify/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // admin endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // protected app APIs
                 .requestMatchers("/certificates/**", "/quiz/**").authenticated()
-                // everything else
                 .anyRequest().authenticated()
             )
-            // ✅ always return JSON for 401/403
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) -> {
                     res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -70,13 +63,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Respect X-Forwarded-* from ngrok (host/scheme)
     @Bean
     public ForwardedHeaderFilter forwardedHeaderFilter() {
         return new ForwardedHeaderFilter();
     }
 
-    // AuthenticationManager (for auth flows)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

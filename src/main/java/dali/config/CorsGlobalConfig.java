@@ -11,21 +11,22 @@ import java.util.List;
 
 @Configuration
 public class CorsGlobalConfig {
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration cfg = new CorsConfiguration();
+    cfg.setAllowCredentials(false); // header JWT only
+    cfg.setAllowedOriginPatterns(List.of(
+      "http://localhost:4200",
+      "https://*.ngrok-free.app",
+      "https://*.ngrok.app"
+    ));
+    cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+    cfg.setAllowedHeaders(List.of("*"));
+    cfg.setExposedHeaders(List.of("Authorization","Content-Disposition"));
+    cfg.setMaxAge(3600L);
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowCredentials(false); // JWT in header; no cookies needed
-        cfg.setAllowedOrigins(List.of(
-            "http://localhost:4200",
-            "https://c6c21ca3441c.ngrok-free.app"
-        ));
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","Origin","ngrok-skip-browser-warning"));
-        cfg.setExposedHeaders(List.of("Authorization","Content-Disposition"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
+    src.registerCorsConfiguration("/**", cfg);
+    return src;
+  }
 }
